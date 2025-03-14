@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useState } from 'react';
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
 import styles from '../styles/Home.module.css';
+import { Eye, EyeOff } from 'lucide-react'; // ✅ Import icons for toggling password visibility
 
 function Tabs(props: React.PropsWithChildren<{}>) {
   const searchParams = useSearchParams();
@@ -45,6 +46,8 @@ function DemoMeetingTab(props: { label: string }) {
   const router = useRouter();
   const [e2ee, setE2ee] = useState(false);
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const [showPassphrase, setShowPassphrase] = useState(false); // ✅ Manage password visibility
+
   const startMeeting = () => {
     if (e2ee) {
       router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
@@ -52,9 +55,9 @@ function DemoMeetingTab(props: { label: string }) {
       router.push(`/rooms/${generateRoomId()}`);
     }
   };
+
   return (
     <div className={styles.tabContent}>
-      <p style={{ margin: 0 }}>Try LiveKit Meet for free with our live demo project.</p>
       <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
         Start Meeting
       </button>
@@ -65,18 +68,25 @@ function DemoMeetingTab(props: { label: string }) {
             type="checkbox"
             checked={e2ee}
             onChange={(ev) => setE2ee(ev.target.checked)}
-          ></input>
+          />
           <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
         </div>
         {e2ee && (
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
             <label htmlFor="passphrase">Passphrase</label>
             <input
               id="passphrase"
-              type="password"
+              type={showPassphrase ? 'text' : 'password'} // ✅ Toggle visibility
               value={sharedPassphrase}
               onChange={(ev) => setSharedPassphrase(ev.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassphrase(!showPassphrase)}
+              aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
+            >
+              {showPassphrase ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         )}
       </div>
@@ -86,9 +96,9 @@ function DemoMeetingTab(props: { label: string }) {
 
 function CustomConnectionTab(props: { label: string }) {
   const router = useRouter();
-
   const [e2ee, setE2ee] = useState(false);
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const [showPassphrase, setShowPassphrase] = useState(false); // ✅ Manage password visibility
 
   const onSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -103,6 +113,7 @@ function CustomConnectionTab(props: { label: string }) {
       router.push(`/custom/?liveKitUrl=${serverUrl}&token=${token}`);
     }
   };
+
   return (
     <form className={styles.tabContent} onSubmit={onSubmit}>
       <p style={{ marginTop: 0 }}>
@@ -130,30 +141,31 @@ function CustomConnectionTab(props: { label: string }) {
             type="checkbox"
             checked={e2ee}
             onChange={(ev) => setE2ee(ev.target.checked)}
-          ></input>
+          />
           <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
         </div>
         {e2ee && (
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
             <label htmlFor="passphrase">Passphrase</label>
             <input
               id="passphrase"
-              type="password"
+              type={showPassphrase ? 'text' : 'password'} // ✅ Toggle visibility
               value={sharedPassphrase}
               onChange={(ev) => setSharedPassphrase(ev.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassphrase(!showPassphrase)}
+              aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
+            >
+              {showPassphrase ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         )}
       </div>
 
-      <hr
-        style={{ width: '100%', borderColor: 'rgba(255, 255, 255, 0.15)', marginBlock: '1rem' }}
-      />
-      <button
-        style={{ paddingInline: '1.25rem', width: '100%' }}
-        className="lk-button"
-        type="submit"
-      >
+      <hr style={{ width: '100%', borderColor: 'rgba(255, 255, 255, 0.15)', marginBlock: '1rem' }} />
+      <button style={{ paddingInline: '1.25rem', width: '100%' }} className="lk-button" type="submit">
         Connect
       </button>
     </form>
@@ -164,20 +176,6 @@ export default function Page() {
   return (
     <>
       <main className={styles.main} data-lk-theme="default">
-        <div className="header">
-          <img src="/images/livekit-meet-home.svg" alt="LiveKit Meet" width="360" height="45" />
-          <h2>
-            Open source video conferencing app built on{' '}
-            <a href="https://github.com/livekit/components-js?ref=meet" rel="noopener">
-              LiveKit&nbsp;Components
-            </a>
-            ,{' '}
-            <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
-              LiveKit&nbsp;Cloud
-            </a>{' '}
-            and Next.js.
-          </h2>
-        </div>
         <Suspense fallback="Loading">
           <Tabs>
             <DemoMeetingTab label="Demo" />
@@ -185,17 +183,6 @@ export default function Page() {
           </Tabs>
         </Suspense>
       </main>
-      <footer data-lk-theme="default">
-        Hosted on{' '}
-        <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
-          LiveKit Cloud
-        </a>
-        . Source code on{' '}
-        <a href="https://github.com/livekit/meet?ref=meet" rel="noopener">
-          GitHub
-        </a>
-        .
-      </footer>
     </>
   );
 }
