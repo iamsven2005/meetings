@@ -1,2 +1,1 @@
-## Online Meetings
-Hosted online meetings
+Repo for online meetings
